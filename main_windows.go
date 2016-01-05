@@ -15,6 +15,7 @@ import (
 
 const (
 	MAX_WAIT = uint32(3600 * 1000) // 1hr
+	VERSION = "1.0.1"
 )
 
 var (
@@ -44,6 +45,9 @@ func RunTarget(cmd, input string) (code uintptr, e error) {
 	}
 	if !ok {
 		log.Printf("[!!] Input %s timed out.", input)
+		code = uintptr(w32.WAIT_TIMEOUT) 
+		w32.TerminateProcess(pi.Process, uint32(code))
+		return
 	}
 
 	code, e = w32.GetExitCodeProcess(pi.Process)
@@ -85,7 +89,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	log.Printf("[OK] %s starting up...", os.Args[0])
+	log.Printf("[OK] %s %s starting up...", os.Args[0], VERSION)
 	// Make sure we have some input files
 	mark := time.Now()
 	matches, err := filepath.Glob(*flagInputs)
