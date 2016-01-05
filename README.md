@@ -45,6 +45,7 @@ install Go, if you haven't already done so.
 2016/01/04 16:25:37 [!!] "C:\\jxrs\\Maui-32bppCMYKDIRECT.jxr" 0x88982f62
 2016/01/04 16:25:37 [!!] "C:\\jxrs\\Maui-32bppYCC422.jxr" 0x88982f62
 2016/01/04 16:25:43 [OK] All done. 208 files in 9.4809055s (21.94/s)
+```
 
 ## TODO
 
