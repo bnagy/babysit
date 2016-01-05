@@ -34,10 +34,16 @@ func RunTarget(cmd, input string) (code uintptr, e error) {
 	} else {
 		// log.Printf("[OK] Created process %q with handle 0x%x, PID %d", cmd, pi.Process, pi.ProcessId)
 	}
+	defer w32.CloseHandle(pi.Process)
+	defer w32.CloseHandle(pi.Thread)
 
-	e = w32.WaitForSingleObject(pi.Process, uint32(*flagTimeout))
+	ok, e := w32.WaitForSingleObject(pi.Process, uint32(*flagTimeout))
 	if e != nil {
+		// Treat anything except OK or "timed out" as unrecoverable
 		log.Fatalf("[!!] Failed in WaitForSingleObject: %s", e)
+	}
+	if !ok {
+		log.Printf("[!!] Input %s timed out.", input)
 	}
 
 	code, e = w32.GetExitCodeProcess(pi.Process)
@@ -49,8 +55,6 @@ func RunTarget(cmd, input string) (code uintptr, e error) {
 		}
 	}
 
-	w32.CloseHandle(pi.Process)
-	w32.CloseHandle(pi.Thread)
 	return
 }
 
@@ -81,7 +85,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	//Make sure we have some input files
+	log.Printf("[OK] %s starting up...", os.Args[0])
+	// Make sure we have some input files
 	mark := time.Now()
 	matches, err := filepath.Glob(*flagInputs)
 	if err != nil {
