@@ -15,7 +15,7 @@ import (
 
 const (
 	MAX_WAIT = uint32(3600 * 1000) // 1hr
-	VERSION = "1.0.1"
+	VERSION = "1.1.0"
 )
 
 var (
@@ -62,6 +62,34 @@ func RunTarget(cmd, input string) (code uintptr, e error) {
 	return
 }
 
+// filepath.Glob and filepath.Walk both use lexical order, which means they
+// sort internally - this makes huge directories very very slow.
+func getInputs(spec string) (matches []string, e error) {
+	dir := filepath.Dir(spec)
+	
+	baseDir, e := os.Open(dir)
+	if e != nil {
+		return
+	}
+
+	files, e := baseDir.Readdir(0)
+	if e != nil {
+		return
+	}
+
+	for _, f := range files {
+		if f.IsDir() {
+			continue
+		}
+		fn := filepath.Join(dir, f.Name())		
+		if match, _ := filepath.Match(spec, fn); match {
+			matches = append(matches, fn)
+		}
+	}
+
+	return
+
+}
 func main() {
 
 	flag.Usage = func() {
@@ -92,7 +120,8 @@ func main() {
 	log.Printf("[OK] %s %s starting up...", os.Args[0], VERSION)
 	// Make sure we have some input files
 	mark := time.Now()
-	matches, err := filepath.Glob(*flagInputs)
+	matches, err := getInputs(*flagInputs)
+
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "[!!] Bad pattern %q: %s\n", *flagInputs, err)
 		flag.Usage()
